@@ -114,9 +114,9 @@ module.exports = {
             })
             .then(() => {
                 log.info("XML deployment starting........ ");
-                _.forEach(endpointArray, function(ip){
-                    if(!ip) return log.info("Blank endpoint, no files deployed.");
-                    deployEndpoints.push(new Endpoint(ip, null, "wallpaper"));
+                _.forEach(endpointArray, function(csvendpoint){
+                    if(!csvendpoint) return log.info("Blank endpoint, no files deployed.");
+                    deployEndpoints.push(new Endpoint(csvendpoint.ip, null, "wallpaper",csvendpoint.img));
                 })
             })
             .catch(err => {

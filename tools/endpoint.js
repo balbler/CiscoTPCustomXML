@@ -14,12 +14,19 @@ const request = require('request');
 const fs = require('fs');
 
 //pass in object versus single values
-function Endpoint(ip,xml,type){
+function Endpoint(ip,xml,type,wallpaper){
     this.ipAddress = ip;
     this.password = process.env.TPADMINPWD;
     this.username = process.env.TPADMIN;
+
     this.url = `http://${ip}/putxml`;
     this.wallpaperUrl = `http://${ip}/api/wallpapers`;
+    if(wallpaper===undefined){
+        this.wallpaperfile = process.env.DEFAULTIMG;
+
+    }else{
+    this.wallpaperfile=wallpaper;
+    }
     this.version = '';
     this.xml = xml;
     this.type = type;
@@ -46,6 +53,8 @@ Endpoint.prototype.init = function(){
                         case (/(^)9.2( |.|$)/).test(version):
                             return self.deployXml();
                         case (/(^)9.1( |.|$)/).test(version):
+                            return self.postWallpaper();
+                        case (/(^)8( |.|$)/).test(version):
                             return self.postWallpaper();
                         case (/(^)7( |.|$)/).test(version):
                             return self.postWallpaper();
@@ -123,7 +132,8 @@ Endpoint.prototype.postWallpaper = function(){
     log.info("Posting wall paper");
     const self = this;
     const dir = "./img/wallpaper/";
-    var fileName = fs.readdirSync('./img/wallpaper/');
+    //var fileName = fs.readdirSync('./img/wallpaper/');
+    var fileName=this.wallpaperfile;
     if(!dir) log.error("No file found");
     var fileString = dir+fileName;
     log.info(fileString);
@@ -132,7 +142,7 @@ Endpoint.prototype.postWallpaper = function(){
         file: {
             value:  fs.createReadStream(fileString),
             options: {
-                filename: fileName[0],
+                filename: fileName,
                 contentType: 'image/jpeg'
             }
         }

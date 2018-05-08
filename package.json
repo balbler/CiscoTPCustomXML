@@ -16,6 +16,7 @@
     "jsxapi": "^4.1.2",
     "lodash": "^4.17.5",
     "request": "^2.85.0",
+    "winston": "^3.0.0-rc5",
     "xmlhttprequest": "^1.8.0"
   }
 }

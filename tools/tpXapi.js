@@ -77,6 +77,7 @@ TPXapi.prototype.checkVersion = function(){
             .get('SystemUnit Software Version')
             .then((version) => {
                 self.endpointVersion = version;
+                log.info("found version "+version)
                 resolve(version);
             })
             .catch(err => reject(err));

@@ -23,11 +23,18 @@ module.exports = {
             workbook.csv.readFile(filename)
                 .then(function(worksheet) {
 
-                    for(var i = 0; i<worksheet.actualRowCount+1; i++){
-                        var row = worksheet.getRow(i+1).values;
-                        row = row.toString().replace(/,/g,'');
-                        log.info(row);
-                        endpoints.push(row);
+                    for(var i = 0; i<worksheet.actualRowCount+1; i++) {
+                        var row = worksheet.getRow(i + 1).values;
+                        //row = row.toString().replace(/,/g,'');
+                        var endpoint = {};
+                        endpoint.ip = row[1];
+                        if (endpoint.ip != null){
+
+
+                        if (row[1] != null) endpoint.img = row[2];
+                        log.info(endpoint);
+                        endpoints.push(endpoint);
+                        }
 
                     }
                     resolve(endpoints);

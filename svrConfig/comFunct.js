@@ -1,6 +1,5 @@
 const buildXml = require('../tools/buildXml');
 const excel = require('../tools/excel');
-const image64 = require('../tools/image64');
 const filewatcher = require('../tools/filewatcher');
 const _ = require('lodash');
 const log = require('./logger');
@@ -63,28 +62,23 @@ module.exports = {
          */
         log.info("Branding to be deployed.");
         Promise.resolve()
-            .then(() => {
+            /*.then(() => {
                 return filewatcher.fileWatcher();
             })
             .then((files) => {
                 log.info("Encoding images to base64 for deployment.... ");
                 return image64.base64encode(files);
             })
-            .then((fileString) => {
+            */
+            .then(() => {
                 //log.info(fileString[1]);
-                filePath = fileString;
                 return excel.readcsv()
             })
-            .then((endpoints) => {
-                log.info("Processing branding xml to create new xml file......");
-                endpointArray = endpoints;
-                return buildXml.brandingXml(filePath);
-            })
-            .then((xmlReturn) => {
+            .then((endpointArray) => {
                 log.info("XML deployment starting........ ");
-                _.forEach(endpointArray, function(ip){
-                    if(!ip) return log.info("Blank endpoint, no files deployed.");
-                    deployEndpoints.push(new Endpoint(ip, xmlReturn, 'branding'));
+                _.forEach(endpointArray, function(csvendpoint){
+                    if(!csvendpoint) return log.info("Blank endpoint, no files deployed.");
+                    deployEndpoints.push(new Endpoint(csvendpoint.ip, 'branding',csvendpoint.img,csvendpoint.brand));
 
 
 
@@ -116,7 +110,7 @@ module.exports = {
                 log.info("XML deployment starting........ ");
                 _.forEach(endpointArray, function(csvendpoint){
                     if(!csvendpoint) return log.info("Blank endpoint, no files deployed.");
-                    deployEndpoints.push(new Endpoint(csvendpoint.ip, null, "wallpaper",csvendpoint.img));
+                    deployEndpoints.push(new Endpoint(csvendpoint.ip, "wallpaper",csvendpoint.img));
                 })
             })
             .catch(err => {

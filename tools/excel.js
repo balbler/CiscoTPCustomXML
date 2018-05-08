@@ -31,8 +31,10 @@ module.exports = {
                         if (endpoint.ip != null){
 
 
-                        if (row[1] != null) endpoint.img = row[2];
-                        log.info(endpoint);
+                        endpoint.img = row[2];
+                        endpoint.brand = row[3];
+
+                        log.info(JSON.stringify(endpoint));
                         endpoints.push(endpoint);
                         }
 

@@ -12,23 +12,33 @@ const TpXapi = require('./tpXapi');
 const log = require('../svrConfig/logger');
 const request = require('request');
 const fs = require('fs');
+const buildXml = require('../tools/buildXml');
+const image64 = require('../tools/image64');
 
 //pass in object versus single values
-function Endpoint(ip,xml,type,wallpaper){
+function Endpoint(ip,type,wallpaper,brandimage){
     this.ipAddress = ip;
     this.password = process.env.TPADMINPWD;
     this.username = process.env.TPADMIN;
 
     this.url = `http://${ip}/putxml`;
     this.wallpaperUrl = `http://${ip}/api/wallpapers`;
+    var branddir = "./img/brand/";
+    var wallpaperdir = "./img/wallpaper/";
+
     if(wallpaper===undefined){
-        this.wallpaperfile = process.env.DEFAULTIMG;
+        this.wallpaperfile = wallpaperdir+"/"+process.env.DEFAULTIMG;
 
     }else{
-    this.wallpaperfile=wallpaper;
+    this.wallpaperfile=wallpaperdir+"/"+wallpaper;
+    }
+    if(brandimage===undefined){
+        this.brandimage = branddir+"/"+process.env.DEFAULTBRAND;
+
+    }else{
+        this.brandimage=branddir+"/"+brandimage;
     }
     this.version = '';
-    this.xml = xml;
     this.type = type;
     this.init();
 }
@@ -40,6 +50,7 @@ Endpoint.prototype.init = function(){
 //insert version checker to work out best thing to deploy. Should check version for back-bundles as well.
     self.firmwareCheck()
         .then((data) => {
+
             var version = data.version.slice(2,7);
             var tpType = data.type;
             log.info(version + tpType);
@@ -107,40 +118,43 @@ Endpoint.prototype.firmwareCheck = function (){
 Endpoint.prototype.deployXml =  function(){
     var self = this;
     var mimeType = "text/xml";
-    const xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() {
+    image64.base64encode([this.wallpaperfile,this.brandimage]).then((base64image)=> {
+        this.xml = buildXml.brandingXml(base64image[0], base64image[1]).then((xml) => {
+                this.xml = xml;
+                const xmlHttp = new XMLHttpRequest();
+                xmlHttp.onreadystatechange = function () {
 
-        if (xmlHttp.readyState === 4) {
-            log.info("State: " + this.readyState);
+                    if (xmlHttp.readyState === 4) {
+                        log.info("State: " + this.readyState);
 
 
-            if (this.readyState === 4) {
-                log.info(null,"Complete.\nBody length: " + this.responseText.length);
-                log.info("Body:\n" + this.responseText+xmlHttp.DONE);
-                if(xmlHttp.DONE === 4 && this.responseText.length > 1) return log.info("Package Deployed to "+self.ipAddress);
+                        if (this.readyState === 4) {
+                            log.info(null, "Complete.\nBody length: " + this.responseText.length);
+                            log.info("Body:\n" + this.responseText + xmlHttp.DONE);
+                            if (xmlHttp.DONE === 4 && this.responseText.length > 1) return log.info("Package Deployed to " + self.ipAddress);
+                        }
+
+                    }
+                }
+                xmlHttp.open('POST', self.url, true, self.username, self.password);
+                xmlHttp.setRequestHeader('Content-Type', mimeType);
+                xmlHttp.withCredentials = true;
+                xmlHttp.send(this.xml);
             }
-
-        }
-    }
-    xmlHttp.open('POST', self.url, true, self.username, self.password);
-    xmlHttp.setRequestHeader('Content-Type', mimeType);
-    xmlHttp.withCredentials = true;
-    xmlHttp.send(this.xml);
+        );
+    });
 };
 
 Endpoint.prototype.postWallpaper = function(){
     log.info("Posting wall paper");
     const self = this;
-    const dir = "./img/wallpaper/";
-    //var fileName = fs.readdirSync('./img/wallpaper/');
     var fileName=this.wallpaperfile;
-    if(!dir) log.error("No file found");
-    var fileString = dir+fileName;
-    log.info(fileString);
+    if(!fileName) log.error("No file found");
+    log.info(fileName);
     var formData = {
 
         file: {
-            value:  fs.createReadStream(fileString),
+            value:  fs.createReadStream(fileName),
             options: {
                 filename: fileName,
                 contentType: 'image/jpeg'
